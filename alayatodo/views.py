@@ -80,7 +80,7 @@ def todos_POST():
     return redirect('/todo')
 
 
-@app.route('/todo/<id>', methods=['DELETE'])
+@app.route('/todo/<id>', methods=['POST'])
 def todo_DELETE(id):
     if not session.get('logged_in'):
         return redirect('/login')
@@ -89,7 +89,7 @@ def todo_DELETE(id):
     return redirect('/todo')
 
 
-@app.route('/todo/<id>', methods=['POST'])
+@app.route('/todo/<id>/complete', methods=['POST'])
 def todo_POST(id):
     if not session.get('logged_in'):
         return redirect('/login')
