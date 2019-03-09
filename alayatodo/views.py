@@ -61,7 +61,7 @@ def todos():
         return redirect('/login')
     cur = g.db.execute("SELECT * FROM todos WHERE user_id = '%s'" % session.get('user')['id'])
     todos = cur.fetchall()
-    return render_template('todos.html', todos=todos)
+    return render_template('todos.html', todos=todos, get_flashed_messages=get_flashed_messages)
 
 
 @app.route('/todo', methods=['POST'])
@@ -77,6 +77,7 @@ def todos_POST():
         % (session['user']['id'], description)
     )
     g.db.commit()
+    session['alert'] = ['A todo has been successfully created!']
     return redirect('/todo')
 
 
@@ -86,6 +87,7 @@ def todo_DELETE(id):
         return redirect('/login')
     g.db.execute("DELETE FROM todos WHERE id ='%s' AND user_id = '%s'" % (id, session.get('user')['id']))
     g.db.commit()
+    session['alert'] = ['A todo has been successfully deleted!']
     return redirect('/todo')
 
 
@@ -104,3 +106,9 @@ def todo_json(id):
         return redirect('/login')
     cur = g.db.execute("SELECT * FROM todos WHERE id ='%s' AND user_id = '%s'" % (id, session.get('user')['id']))
     return jsonify(dict(zip([column[0] for column in cur.description], cur.fetchone())))
+
+
+def get_flashed_messages():
+    alert = session['alert'] if 'alert' in session else []
+    session.pop('alert', None)
+    return alert
