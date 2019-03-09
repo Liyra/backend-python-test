@@ -1,4 +1,5 @@
-from alayatodo import app
+import json
+from alayatodo import app, db
 from flask import (
     g,
     redirect,
@@ -8,6 +9,7 @@ from flask import (
     abort,
     jsonify
     )
+from alayatodo.models import Users, Todos
 
 
 @app.route('/')
@@ -27,11 +29,9 @@ def login_POST():
     username = request.form.get('username')
     password = request.form.get('password')
 
-    sql = "SELECT * FROM users WHERE username = '%s' AND password = '%s'";
-    cur = g.db.execute(sql % (username, password))
-    user = cur.fetchone()
+    user = Users.query.filter_by(username=username, password=password).one()
     if user:
-        session['user'] = dict(user)
+        session['user'] = user.to_dict()
         session['logged_in'] = True
         return redirect('/todo')
 
@@ -49,8 +49,7 @@ def logout():
 def todo(id):
     if not session.get('logged_in'):
         return redirect('/login')
-    cur = g.db.execute("SELECT * FROM todos WHERE id = '%s' AND user_id = '%s'" % (id, session.get('user')['id']))
-    todo = cur.fetchone()
+    todo = Todos.query.filter_by(user_id=session.get('user')['id'], id=id).one()
     return render_template('todo.html', todo=todo)
 
 
@@ -59,8 +58,7 @@ def todo(id):
 def todos():
     if not session.get('logged_in'):
         return redirect('/login')
-    cur = g.db.execute("SELECT * FROM todos WHERE user_id = '%s'" % session.get('user')['id'])
-    todos = cur.fetchall()
+    todos = Todos.query.filter_by(user_id=session.get('user')['id']).all()
     return render_template('todos.html', todos=todos, get_flashed_messages=get_flashed_messages)
 
 
@@ -72,11 +70,8 @@ def todos_POST():
     description = request.form.get('description', None)
     if description is None or description is '':
         abort(400, 'A description must be provided')
-    g.db.execute(
-        "INSERT INTO todos (user_id, description) VALUES ('%s', '%s')"
-        % (session['user']['id'], description)
-    )
-    g.db.commit()
+    db.session.add(Todos(user_id=session['user']['id'], description=description))
+    db.session.commit()
     session['alert'] = ['A todo has been successfully created!']
     return redirect('/todo')
 
@@ -85,8 +80,8 @@ def todos_POST():
 def todo_DELETE(id):
     if not session.get('logged_in'):
         return redirect('/login')
-    g.db.execute("DELETE FROM todos WHERE id ='%s' AND user_id = '%s'" % (id, session.get('user')['id']))
-    g.db.commit()
+    Todos.query.filter_by(id=id).delete()
+    db.session.commit()
     session['alert'] = ['A todo has been successfully deleted!']
     return redirect('/todo')
 
@@ -95,8 +90,8 @@ def todo_DELETE(id):
 def todo_POST(id):
     if not session.get('logged_in'):
         return redirect('/login')
-    g.db.execute("UPDATE todos SET completed=1 WHERE id ='%s' AND user_id = '%s'" % (id, session.get('user')['id']))
-    g.db.commit()
+    db.session.query(Todos).filter_by(user_id=session.get('user')['id'], id=id).update({ "completed": True})
+    db.session.commit()
     return redirect('/todo')
 
 
@@ -104,8 +99,8 @@ def todo_POST(id):
 def todo_json(id):
     if not session.get('logged_in'):
         return redirect('/login')
-    cur = g.db.execute("SELECT * FROM todos WHERE id ='%s' AND user_id = '%s'" % (id, session.get('user')['id']))
-    return jsonify(dict(zip([column[0] for column in cur.description], cur.fetchone())))
+    todo = Todos.query.filter_by(user_id=session.get('user')['id'], id=id).one()
+    return jsonify(todo.to_dict())
 
 
 def get_flashed_messages():
