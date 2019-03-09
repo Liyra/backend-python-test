@@ -49,7 +49,7 @@ def logout():
 def todo(id):
     if not session.get('logged_in'):
         return redirect('/login')
-    cur = g.db.execute("SELECT * FROM todos WHERE id ='%s'" % id)
+    cur = g.db.execute("SELECT * FROM todos WHERE id = '%s' AND user_id = '%s'" % (id, session.get('user')['id']))
     todo = cur.fetchone()
     return render_template('todo.html', todo=todo)
 
@@ -59,7 +59,7 @@ def todo(id):
 def todos():
     if not session.get('logged_in'):
         return redirect('/login')
-    cur = g.db.execute("SELECT * FROM todos")
+    cur = g.db.execute("SELECT * FROM todos WHERE user_id = '%s'" % session.get('user')['id'])
     todos = cur.fetchall()
     return render_template('todos.html', todos=todos)
 
@@ -84,7 +84,7 @@ def todos_POST():
 def todo_DELETE(id):
     if not session.get('logged_in'):
         return redirect('/login')
-    g.db.execute("DELETE FROM todos WHERE id ='%s'" % id)
+    g.db.execute("DELETE FROM todos WHERE id ='%s' AND user_id = '%s'" % (id, session.get('user')['id']))
     g.db.commit()
     return redirect('/todo')
 
@@ -93,7 +93,7 @@ def todo_DELETE(id):
 def todo_POST(id):
     if not session.get('logged_in'):
         return redirect('/login')
-    g.db.execute("UPDATE todos SET completed=1 WHERE id ='%s'" % id)
+    g.db.execute("UPDATE todos SET completed=1 WHERE id ='%s' AND user_id = '%s'" % (id, session.get('user')['id']))
     g.db.commit()
     return redirect('/todo')
 
@@ -102,5 +102,5 @@ def todo_POST(id):
 def todo_json(id):
     if not session.get('logged_in'):
         return redirect('/login')
-    cur = g.db.execute("SELECT * FROM todos WHERE id ='%s'" % id)
+    cur = g.db.execute("SELECT * FROM todos WHERE id ='%s' AND user_id = '%s'" % (id, session.get('user')['id']))
     return jsonify(dict(zip([column[0] for column in cur.description], cur.fetchone())))
