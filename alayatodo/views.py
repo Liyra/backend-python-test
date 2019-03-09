@@ -5,7 +5,8 @@ from flask import (
     render_template,
     request,
     session,
-    abort
+    abort,
+    jsonify
     )
 
 
@@ -46,6 +47,8 @@ def logout():
 
 @app.route('/todo/<id>', methods=['GET'])
 def todo(id):
+    if not session.get('logged_in'):
+        return redirect('/login')
     cur = g.db.execute("SELECT * FROM todos WHERE id ='%s'" % id)
     todo = cur.fetchone()
     return render_template('todo.html', todo=todo)
@@ -93,3 +96,11 @@ def todo_POST(id):
     g.db.execute("UPDATE todos SET completed=1 WHERE id ='%s'" % id)
     g.db.commit()
     return redirect('/todo')
+
+
+@app.route('/todo/<id>/json', methods=['GET'])
+def todo_json(id):
+    if not session.get('logged_in'):
+        return redirect('/login')
+    cur = g.db.execute("SELECT * FROM todos WHERE id ='%s'" % id)
+    return jsonify(dict(zip([column[0] for column in cur.description], cur.fetchone())))
