@@ -105,8 +105,8 @@ def todo_POST(id):
 def todo_json(id):
     if not session.get('logged_in'):
         return redirect('/login')
-    todo = Todos.query.filter_by(user_id=session.get('user')['id'], id=id).one()
-    return jsonify(todo.to_dict())
+    todo = Todos.query.filter_by(user_id=session.get('user')['id'], id=id).first()
+    return jsonify(todo.to_dict() if todo else None)
 
 
 def get_flashed_messages():
