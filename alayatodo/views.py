@@ -13,6 +13,10 @@ from flask import (
 from alayatodo.models import Users, Todos
 
 
+ERROR_STRING_404 ='Resource not found'
+PAGINATION_NUMBER = 3
+
+
 @app.route('/')
 def home():
     with app.open_resource('../README.md', mode='r') as f:
@@ -30,11 +34,15 @@ def login_POST():
     username = request.form.get('username')
     password = request.form.get('password')
 
-    user = Users.query.filter_by(username=username, password=password).first()
-    if user:
-        session['user'] = user.to_dict_unsensitive()
-        session['logged_in'] = True
-        return redirect('/todo')
+    users = Users.query.filter_by(username=username).all()
+    for user in users:
+        try:
+            if user and user.validate_password(password):
+                session['user'] = user.to_dict_unsensitive()
+                session['logged_in'] = True
+                return redirect('/todo')
+        except ValueError as e:
+            print(e)
 
     return redirect('/login')
 
@@ -50,8 +58,11 @@ def logout():
 def todo(id):
     if not session.get('logged_in'):
         return redirect('/login')
-    todo = Todos.query.filter_by(user_id=session.get('user')['id'], id=id).one()
-    return render_template('todo.html', todo=todo)
+    todo = Todos.query.filter_by(user_id=session.get('user')['id'], id=id).first()
+    if todo:
+        return render_template('todo.html', todo=todo)
+    else:
+        return abort(404, ERROR_STRING_404)
 
 
 @app.route('/todo', methods=['GET'])
@@ -60,7 +71,7 @@ def todos():
     if not session.get('logged_in'):
         return redirect('/login')
     page = request.args.get('page', 1, type=int)
-    todos = Todos.query.filter_by(user_id=session.get('user')['id']).paginate(page, 3, False)
+    todos = Todos.query.filter_by(user_id=session.get('user')['id']).paginate(page, PAGINATION_NUMBER, False)
     next_url = url_for('todos', page=todos.next_num) if todos.has_next else None
     prev_url = url_for('todos', page=todos.prev_num) if todos.has_prev else None
     return render_template('todos.html', todos=todos.items, get_flashed_messages=get_flashed_messages,
@@ -86,9 +97,10 @@ def todos_POST():
 def todo_DELETE(id):
     if not session.get('logged_in'):
         return redirect('/login')
-    Todos.query.filter_by(id=id).delete()
+    deleted = Todos.query.filter_by(user_id=session.get('user')['id'], id=id).delete()
     db.session.commit()
-    session['alert'] = ['A todo has been successfully deleted!']
+    if deleted == 1:
+        session['alert'] = ['A todo has been successfully deleted!']
     return redirect('/todo')
 
 
@@ -105,8 +117,11 @@ def todo_POST(id):
 def todo_json(id):
     if not session.get('logged_in'):
         return redirect('/login')
-    todo = Todos.query.filter_by(user_id=session.get('user')['id'], id=id).one()
-    return jsonify(todo.to_dict())
+    todo = Todos.query.filter_by(user_id=session.get('user')['id'], id=id).first()
+    if todo:
+        return jsonify(todo.to_dict())
+    else:
+        return abort(404, ERROR_STRING_404)
 
 
 def get_flashed_messages():
