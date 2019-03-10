@@ -86,7 +86,7 @@ def todos_POST():
 def todo_DELETE(id):
     if not session.get('logged_in'):
         return redirect('/login')
-    Todos.query.filter_by(id=id).delete()
+    Todos.query.filter_by(user_id=session.get('user')['id'], id=id).delete()
     db.session.commit()
     session['alert'] = ['A todo has been successfully deleted!']
     return redirect('/todo')
