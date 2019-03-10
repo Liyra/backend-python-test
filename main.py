@@ -4,7 +4,6 @@
 Usage:
   main.py [run]
   main.py initdb
-  main.py migrate_task_2
 """
 from docopt import docopt
 from passlib.hash import bcrypt
@@ -39,10 +38,8 @@ if __name__ == '__main__':
     if args['initdb']:
         _run_sql('resources/database.sql')
         _run_sql('resources/fixtures.sql')
+        _run_sql('resources/task_2_migration.sql')
         encrypt_bd_passwords()
         print("AlayaTodo: Database initialized.")
-    if args['migrate_task_2']:
-        _run_sql('resources/task_2_migration.sql')
-        print('AlayaTodo: Database migration for task 2 completed.')
     else:
         app.run(use_reloader=True)
