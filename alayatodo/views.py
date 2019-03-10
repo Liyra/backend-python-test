@@ -31,7 +31,7 @@ def login_POST():
 
     user = Users.query.filter_by(username=username, password=password).one()
     if user:
-        session['user'] = user.to_dict()
+        session['user'] = user.to_dict_unsensitive()
         session['logged_in'] = True
         return redirect('/todo')
 

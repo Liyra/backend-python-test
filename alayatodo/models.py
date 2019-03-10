@@ -9,8 +9,8 @@ class Users(db.Model):
     def __repr__(self):
         return '<Users {}>'.format(self.username)
 
-    def to_dict(self):
-        return { 'id': self.id, 'username': self.username, 'password': self.password, 'todos': self.todos }
+    def to_dict_unsensitive(self):
+        return { 'id': self.id, 'username': self.username }
 
 
 class Todos(db.Model):
