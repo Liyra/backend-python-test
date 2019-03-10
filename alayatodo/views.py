@@ -13,6 +13,9 @@ from flask import (
 from alayatodo.models import Users, Todos
 
 
+ERROR_STRING_404 ='Resource not found'
+
+
 @app.route('/')
 def home():
     with app.open_resource('../README.md', mode='r') as f:
@@ -50,8 +53,11 @@ def logout():
 def todo(id):
     if not session.get('logged_in'):
         return redirect('/login')
-    todo = Todos.query.filter_by(user_id=session.get('user')['id'], id=id).one()
-    return render_template('todo.html', todo=todo)
+    todo = Todos.query.filter_by(user_id=session.get('user')['id'], id=id).first()
+    if todo:
+        return render_template('todo.html', todo=todo)
+    else:
+        return abort(404, ERROR_STRING_404)
 
 
 @app.route('/todo', methods=['GET'])
@@ -106,7 +112,10 @@ def todo_json(id):
     if not session.get('logged_in'):
         return redirect('/login')
     todo = Todos.query.filter_by(user_id=session.get('user')['id'], id=id).first()
-    return jsonify(todo.to_dict() if todo else None)
+    if todo:
+        return jsonify(todo.to_dict())
+    else:
+        return abort(404, ERROR_STRING_404)
 
 
 def get_flashed_messages():
