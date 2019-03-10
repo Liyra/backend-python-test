@@ -7,10 +7,12 @@ Usage:
   main.py migrate_task_2
 """
 from docopt import docopt
+from passlib.hash import bcrypt
 import subprocess
 import os
 
-from alayatodo import app
+from alayatodo import app, db
+from alayatodo.models import Users
 
 
 def _run_sql(filename):
@@ -25,11 +27,19 @@ def _run_sql(filename):
         os._exit(1)
 
 
+def encrypt_bd_passwords():
+    users = Users.query.all()
+    for user in users:
+        db.session.query(Users).filter_by(id=user.id).update({ "password": bcrypt.hash(user.password)})
+    db.session.commit()
+
+
 if __name__ == '__main__':
     args = docopt(__doc__)
     if args['initdb']:
         _run_sql('resources/database.sql')
         _run_sql('resources/fixtures.sql')
+        encrypt_bd_passwords()
         print("AlayaTodo: Database initialized.")
     if args['migrate_task_2']:
         _run_sql('resources/task_2_migration.sql')
