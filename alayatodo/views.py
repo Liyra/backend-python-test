@@ -14,6 +14,7 @@ from alayatodo.models import Users, Todos
 
 
 ERROR_STRING_404 ='Resource not found'
+PAGINATION_NUMBER = 3
 
 
 @app.route('/')
@@ -70,7 +71,7 @@ def todos():
     if not session.get('logged_in'):
         return redirect('/login')
     page = request.args.get('page', 1, type=int)
-    todos = Todos.query.filter_by(user_id=session.get('user')['id']).paginate(page, 3, False)
+    todos = Todos.query.filter_by(user_id=session.get('user')['id']).paginate(page, PAGINATION_NUMBER, False)
     next_url = url_for('todos', page=todos.next_num) if todos.has_next else None
     prev_url = url_for('todos', page=todos.prev_num) if todos.has_prev else None
     return render_template('todos.html', todos=todos.items, get_flashed_messages=get_flashed_messages,
