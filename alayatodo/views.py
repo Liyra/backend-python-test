@@ -29,7 +29,7 @@ def login_POST():
     username = request.form.get('username')
     password = request.form.get('password')
 
-    user = Users.query.filter_by(username=username, password=password).one()
+    user = Users.query.filter_by(username=username, password=password).first()
     if user:
         session['user'] = user.to_dict_unsensitive()
         session['logged_in'] = True
