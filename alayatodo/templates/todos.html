@@ -15,7 +15,7 @@
                 <td>{{ todo.user_id }}</td>
                 <td>
                     <a href="{{ url_for('todo', id=todo.id) }}">
-                       {{ todo.description }}
+                        {{ todo.description }}
                     </a>
                 </td>
                 <td>
@@ -46,5 +46,13 @@
             </form>
         </tr>
     </table>
+    <div class="btn-group" role="group" aria-label="Pagination buttons">
+        {% if prev_url %}
+        <a type="button" href="{{ prev_url }}" class="btn btn-primary">Previous</a>
+        {% endif %}
+        {% if next_url %}
+        <a type="button" href="{{ next_url }}" class="btn btn-primary">Next</a>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

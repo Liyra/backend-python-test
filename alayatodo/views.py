@@ -7,7 +7,8 @@ from flask import (
     request,
     session,
     abort,
-    jsonify
+    jsonify,
+    url_for
     )
 from alayatodo.models import Users, Todos
 
@@ -29,9 +30,9 @@ def login_POST():
     username = request.form.get('username')
     password = request.form.get('password')
 
-    user = Users.query.filter_by(username=username, password=password).one()
+    user = Users.query.filter_by(username=username, password=password).first()
     if user:
-        session['user'] = user.to_dict()
+        session['user'] = user.to_dict_unsensitive()
         session['logged_in'] = True
         return redirect('/todo')
 
@@ -58,8 +59,12 @@ def todo(id):
 def todos():
     if not session.get('logged_in'):
         return redirect('/login')
-    todos = Todos.query.filter_by(user_id=session.get('user')['id']).all()
-    return render_template('todos.html', todos=todos, get_flashed_messages=get_flashed_messages)
+    page = request.args.get('page', 1, type=int)
+    todos = Todos.query.filter_by(user_id=session.get('user')['id']).paginate(page, 3, False)
+    next_url = url_for('todos', page=todos.next_num) if todos.has_next else None
+    prev_url = url_for('todos', page=todos.prev_num) if todos.has_prev else None
+    return render_template('todos.html', todos=todos.items, get_flashed_messages=get_flashed_messages,
+        next_url=next_url, prev_url=prev_url)
 
 
 @app.route('/todo', methods=['POST'])
@@ -69,7 +74,8 @@ def todos_POST():
         return redirect('/login')
     description = request.form.get('description', None)
     if description is None or description is '':
-        abort(400, 'A description must be provided')
+        session['alert'] = ['A description must be provided!']
+        return redirect('/todo')
     db.session.add(Todos(user_id=session['user']['id'], description=description))
     db.session.commit()
     session['alert'] = ['A todo has been successfully created!']
