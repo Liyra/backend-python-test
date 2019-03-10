@@ -69,7 +69,8 @@ def todos_POST():
         return redirect('/login')
     description = request.form.get('description', None)
     if description is None or description is '':
-        abort(400, 'A description must be provided')
+        session['alert'] = ['A description must be provided!']
+        return redirect('/todo')
     db.session.add(Todos(user_id=session['user']['id'], description=description))
     db.session.commit()
     session['alert'] = ['A todo has been successfully created!']
