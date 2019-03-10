@@ -7,7 +7,8 @@ from flask import (
     request,
     session,
     abort,
-    jsonify
+    jsonify,
+    url_for
     )
 from alayatodo.models import Users, Todos
 
@@ -58,8 +59,12 @@ def todo(id):
 def todos():
     if not session.get('logged_in'):
         return redirect('/login')
-    todos = Todos.query.filter_by(user_id=session.get('user')['id']).all()
-    return render_template('todos.html', todos=todos, get_flashed_messages=get_flashed_messages)
+    page = request.args.get('page', 1, type=int)
+    todos = Todos.query.filter_by(user_id=session.get('user')['id']).paginate(page, 3, False)
+    next_url = url_for('todos', page=todos.next_num) if todos.has_next else None
+    prev_url = url_for('todos', page=todos.prev_num) if todos.has_prev else None
+    return render_template('todos.html', todos=todos.items, get_flashed_messages=get_flashed_messages,
+        next_url=next_url, prev_url=prev_url)
 
 
 @app.route('/todo', methods=['POST'])
