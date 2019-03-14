@@ -34,15 +34,14 @@ def login_POST():
     username = request.form.get('username')
     password = request.form.get('password')
 
-    users = Users.query.filter_by(username=username).all()
-    for user in users:
-        try:
-            if user and user.validate_password(password):
-                session['user'] = user.to_dict_unsensitive()
-                session['logged_in'] = True
-                return redirect('/todo')
-        except ValueError as e:
-            print(e)
+    user = Users.query.filter_by(username=username).first()
+    try:
+        if user and user.validate_password(password):
+            session['user'] = user.to_dict_unsensitive()
+            session['logged_in'] = True
+            return redirect('/todo')
+    except ValueError as e:
+        print(e)
 
     return redirect('/login')
 

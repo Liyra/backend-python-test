@@ -4,3 +4,4 @@ Jinja2
 docopt
 passlib
 bcrypt
+Flask_wtf
