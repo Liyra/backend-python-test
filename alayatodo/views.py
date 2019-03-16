@@ -118,10 +118,12 @@ def todo_DELETE(todo_id):
 @app.route('/todo/<todo_id>/complete', methods=['POST'])
 @login_check
 def todo_POST(todo_id):
-    db.session.query(Todos).filter_by(user_id=session.get(
+    updated = db.session.query(Todos).filter_by(user_id=session.get(
         'user')['id'], id=todo_id).update({"completed": True})
     db.session.commit()
-    return redirect('/todo')
+    if updated == 1:
+        return redirect('/todo')
+    return abort(404, ERROR_STRING_404)
 
 
 @app.route('/todo/<todo_id>/json', methods=['GET'])
