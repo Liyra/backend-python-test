@@ -1,4 +1,3 @@
-import json
 from alayatodo import app, db
 from flask import (
     g,
@@ -8,13 +7,28 @@ from flask import (
     session,
     abort,
     jsonify,
-    url_for
-    )
+    url_for,
+    flash
+)
 from alayatodo.models import Users, Todos
+from functools import wraps
+from alayatodo.exception import InvalidUsageJson
 
 
-ERROR_STRING_404 ='Resource not found'
+ERROR_STRING_404 = 'Resource not found'
+DESCRIPTION_NOT_FOUND = 'A description must be provided!'
+TODO_CREATE_MESSAGE_FLASH = 'A todo has been successfully created!'
+TODO_DELETE_MESSAGE_FLASH = 'A todo has been successfully deleted!'
 PAGINATION_NUMBER = 3
+
+
+def login_check(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if not session.get('logged_in'):
+            return redirect('/login')
+        return func(*args, **kwargs)
+    return wrapper
 
 
 @app.route('/')
@@ -53,77 +67,72 @@ def logout():
     return redirect('/')
 
 
-@app.route('/todo/<id>', methods=['GET'])
-def todo(id):
-    if not session.get('logged_in'):
-        return redirect('/login')
-    todo = Todos.query.filter_by(user_id=session.get('user')['id'], id=id).first()
+@app.route('/todo/<todo_id>', methods=['GET'])
+@login_check
+def todo(todo_id):
+    todo = Todos.query.filter_by(
+        user_id=session.get('user')['id'], id=todo_id).first()
     if todo:
         return render_template('todo.html', todo=todo)
-    else:
-        return abort(404, ERROR_STRING_404)
+    return abort(404, ERROR_STRING_404)
 
 
 @app.route('/todo', methods=['GET'])
 @app.route('/todo/', methods=['GET'])
+@login_check
 def todos():
-    if not session.get('logged_in'):
-        return redirect('/login')
     page = request.args.get('page', 1, type=int)
-    todos = Todos.query.filter_by(user_id=session.get('user')['id']).paginate(page, PAGINATION_NUMBER, False)
-    next_url = url_for('todos', page=todos.next_num) if todos.has_next else None
-    prev_url = url_for('todos', page=todos.prev_num) if todos.has_prev else None
-    return render_template('todos.html', todos=todos.items, get_flashed_messages=get_flashed_messages,
-        next_url=next_url, prev_url=prev_url)
+    todos = Todos.query.filter_by(user_id=session.get(
+        'user')['id']).paginate(page, PAGINATION_NUMBER, False)
+    next_url = url_for(
+        'todos', page=todos.next_num) if todos.has_next else None
+    prev_url = url_for(
+        'todos', page=todos.prev_num) if todos.has_prev else None
+    return render_template('todos.html', todos=todos.items, next_url=next_url, prev_url=prev_url)
 
 
 @app.route('/todo', methods=['POST'])
 @app.route('/todo/', methods=['POST'])
+@login_check
 def todos_POST():
-    if not session.get('logged_in'):
-        return redirect('/login')
-    description = request.form.get('description', None)
-    if description is None or description is '':
-        session['alert'] = ['A description must be provided!']
-        return redirect('/todo')
-    db.session.add(Todos(user_id=session['user']['id'], description=description))
+    description = request.form.get('description')
+    if not description:
+        raise InvalidUsageJson(DESCRIPTION_NOT_FOUND, status_code=400)
+    db.session.add(
+        Todos(user_id=session['user']['id'], description=description))
     db.session.commit()
-    session['alert'] = ['A todo has been successfully created!']
+    flash(TODO_CREATE_MESSAGE_FLASH)
     return redirect('/todo')
 
 
-@app.route('/todo/<id>', methods=['POST'])
-def todo_DELETE(id):
-    if not session.get('logged_in'):
-        return redirect('/login')
-    deleted = Todos.query.filter_by(user_id=session.get('user')['id'], id=id).delete()
+@app.route('/todo/<todo_id>', methods=['POST'])
+@login_check
+def todo_DELETE(todo_id):
+    deleted = Todos.query.filter_by(
+        user_id=session.get('user')['id'], id=todo_id).delete()
     db.session.commit()
     if deleted == 1:
-        session['alert'] = ['A todo has been successfully deleted!']
-    return redirect('/todo')
+        flash(TODO_DELETE_MESSAGE_FLASH)
+        return redirect('/todo')
+    return abort(404, ERROR_STRING_404)
 
 
-@app.route('/todo/<id>/complete', methods=['POST'])
-def todo_POST(id):
-    if not session.get('logged_in'):
-        return redirect('/login')
-    db.session.query(Todos).filter_by(user_id=session.get('user')['id'], id=id).update({ "completed": True})
+@app.route('/todo/<todo_id>/complete', methods=['POST'])
+@login_check
+def todo_POST(todo_id):
+    updated = db.session.query(Todos).filter_by(user_id=session.get(
+        'user')['id'], id=todo_id).update({"completed": True})
     db.session.commit()
-    return redirect('/todo')
+    if updated == 1:
+        return redirect('/todo')
+    return abort(404, ERROR_STRING_404)
 
 
-@app.route('/todo/<id>/json', methods=['GET'])
-def todo_json(id):
-    if not session.get('logged_in'):
-        return redirect('/login')
-    todo = Todos.query.filter_by(user_id=session.get('user')['id'], id=id).first()
+@app.route('/todo/<todo_id>/json', methods=['GET'])
+@login_check
+def todo_json(todo_id):
+    todo = Todos.query.filter_by(
+        user_id=session.get('user')['id'], id=todo_id).first()
     if todo:
         return jsonify(todo.to_dict())
-    else:
-        return abort(404, ERROR_STRING_404)
-
-
-def get_flashed_messages():
-    alert = session['alert'] if 'alert' in session else []
-    session.pop('alert', None)
-    return alert
+    raise InvalidUsageJson(ERROR_STRING_404, status_code=404)

@@ -10,38 +10,43 @@
         <th>Completed</th>
         <th>Actions</th>
         {% for todo in todos %}
-            <tr>
-                <td>{{ todo.id }}</td>
-                <td>{{ todo.user_id }}</td>
-                <td>
-                    <a href="{{ url_for('todo', id=todo.id) }}">
-                        {{ todo.description }}
-                    </a>
-                </td>
-                <td>
-                    {% if 1 == todo.completed %}
-                        Yes
-                    {% else %}
-                        No
-                    {% endif %}
-                </td>
-                <td>
-                    <form class="actions-form" method="post" action="{{ url_for('todo_DELETE', id=todo.id) }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                        <button type="submit" class="btn btn-xs btn-danger"><span class="glyphicon glyphicon-remove glyphicon-white"></span></button>
-                    </form>
-                    <form class="actions-form" method="post" action="{{ url_for('todo_POST', id=todo.id) }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                        <button type="submit" class="btn btn-xs btn-success"><span class="glyphicon glyphicon-ok glyphicon-white"></span></button>
-                    </form>
-                </td>
-            </tr>
+        <tr>
+            <td>{{ todo.id }}</td>
+            <td>{{ todo.user_id }}</td>
+            <td>
+                <a href="{{ url_for('todo', todo_id=todo.id) }}">
+                    {{ todo.description }}
+                </a>
+            </td>
+            <td>
+                {% if 1 == todo.completed %}
+                Yes
+                {% else %}
+                No
+                {% endif %}
+            </td>
+            <td>
+                <form class="actions-form" method="post" action="{{ url_for('todo_DELETE', todo_id=todo.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <button type="submit" class="btn btn-xs btn-danger"><span
+                            class="glyphicon glyphicon-remove glyphicon-white"></span></button>
+                </form>
+                {% if 1 != todo.completed %}
+                <form class="actions-form" method="post" action="{{ url_for('todo_POST', todo_id=todo.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <button type="submit" class="btn btn-xs btn-success"><span
+                            class="glyphicon glyphicon-ok glyphicon-white"></span></button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
         {% endfor %}
         <tr>
             <form method="post" action="{{ url_for('todos_POST') }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <td colspan="3">
-                    <input type="textbox" name="description" class="small-6 small-center" placeholder="Description...">
+                    <input type="textbox" name="description" class="small-6 small-center" placeholder="Description..."
+                        required>
                 </td>
                 <td>
                     <button type="submit" class="btn btn-sm btn-primary">Add</button>
