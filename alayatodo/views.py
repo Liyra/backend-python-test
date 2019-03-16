@@ -1,4 +1,3 @@
-import json
 from alayatodo import app, db
 from flask import (
     g,
