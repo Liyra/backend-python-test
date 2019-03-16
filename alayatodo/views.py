@@ -89,7 +89,7 @@ def todos():
 @login_check
 def todos_POST():
     description = request.form.get('description')
-    if description is None or description is '':
+    if not description:
         session['alert'] = ['A description must be provided!']
         return redirect('/todo')
     db.session.add(Todos(user_id=session['user']['id'], description=description))
