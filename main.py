@@ -29,7 +29,8 @@ def _run_sql(filename):
 def encrypt_bd_passwords():
     users = Users.query.all()
     for user in users:
-        db.session.query(Users).filter_by(id=user.id).update({ "password": bcrypt.hash(user.password)})
+        db.session.query(Users).filter_by(id=user.id).update(
+            {"password": bcrypt.hash(user.password)})
     db.session.commit()
 
 

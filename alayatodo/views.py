@@ -8,12 +8,12 @@ from flask import (
     abort,
     jsonify,
     url_for
-    )
+)
 from alayatodo.models import Users, Todos
 from functools import wraps
 
 
-ERROR_STRING_404 ='Resource not found'
+ERROR_STRING_404 = 'Resource not found'
 PAGINATION_NUMBER = 3
 
 
@@ -66,7 +66,8 @@ def logout():
 @app.route('/todo/<id>', methods=['GET'])
 @login_check
 def todo(id):
-    todo = Todos.query.filter_by(user_id=session.get('user')['id'], id=id).first()
+    todo = Todos.query.filter_by(
+        user_id=session.get('user')['id'], id=id).first()
     if todo:
         return render_template('todo.html', todo=todo)
     else:
@@ -78,11 +79,14 @@ def todo(id):
 @login_check
 def todos():
     page = request.args.get('page', 1, type=int)
-    todos = Todos.query.filter_by(user_id=session.get('user')['id']).paginate(page, PAGINATION_NUMBER, False)
-    next_url = url_for('todos', page=todos.next_num) if todos.has_next else None
-    prev_url = url_for('todos', page=todos.prev_num) if todos.has_prev else None
+    todos = Todos.query.filter_by(user_id=session.get(
+        'user')['id']).paginate(page, PAGINATION_NUMBER, False)
+    next_url = url_for(
+        'todos', page=todos.next_num) if todos.has_next else None
+    prev_url = url_for(
+        'todos', page=todos.prev_num) if todos.has_prev else None
     return render_template('todos.html', todos=todos.items, get_flashed_messages=get_flashed_messages,
-        next_url=next_url, prev_url=prev_url)
+                           next_url=next_url, prev_url=prev_url)
 
 
 @app.route('/todo', methods=['POST'])
@@ -93,7 +97,8 @@ def todos_POST():
     if not description:
         session['alert'] = ['A description must be provided!']
         return redirect('/todo')
-    db.session.add(Todos(user_id=session['user']['id'], description=description))
+    db.session.add(
+        Todos(user_id=session['user']['id'], description=description))
     db.session.commit()
     session['alert'] = ['A todo has been successfully created!']
     return redirect('/todo')
@@ -102,7 +107,8 @@ def todos_POST():
 @app.route('/todo/<id>', methods=['POST'])
 @login_check
 def todo_DELETE(id):
-    deleted = Todos.query.filter_by(user_id=session.get('user')['id'], id=id).delete()
+    deleted = Todos.query.filter_by(
+        user_id=session.get('user')['id'], id=id).delete()
     db.session.commit()
     if deleted == 1:
         session['alert'] = ['A todo has been successfully deleted!']
@@ -112,7 +118,8 @@ def todo_DELETE(id):
 @app.route('/todo/<id>/complete', methods=['POST'])
 @login_check
 def todo_POST(id):
-    db.session.query(Todos).filter_by(user_id=session.get('user')['id'], id=id).update({ "completed": True})
+    db.session.query(Todos).filter_by(user_id=session.get(
+        'user')['id'], id=id).update({"completed": True})
     db.session.commit()
     return redirect('/todo')
 
@@ -120,7 +127,8 @@ def todo_POST(id):
 @app.route('/todo/<id>/json', methods=['GET'])
 @login_check
 def todo_json(id):
-    todo = Todos.query.filter_by(user_id=session.get('user')['id'], id=id).first()
+    todo = Todos.query.filter_by(
+        user_id=session.get('user')['id'], id=id).first()
     if todo:
         return jsonify(todo.to_dict())
     else:
