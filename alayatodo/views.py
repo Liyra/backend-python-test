@@ -110,7 +110,8 @@ def todo_DELETE(todo_id):
     db.session.commit()
     if deleted == 1:
         session['alert'] = ['A todo has been successfully deleted!']
-    return redirect('/todo')
+        return redirect('/todo')
+    return abort(404, ERROR_STRING_404)
 
 
 @app.route('/todo/<todo_id>/complete', methods=['POST'])
