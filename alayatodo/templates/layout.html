@@ -34,7 +34,9 @@
     </div>
   </nav>
 
-  {% for message in get_flashed_messages() %}
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+  {% for message in messages %}
   <div class="bs-example bs-example-standalone" data-example-id=dismissible-alert-js>
     <div class="alert alert-warning alert-dismissible fade in" role=alert>
       <button type=button class=close data-dismiss=alert aria-label=Close><span aria-hidden=true>&times;</span></button>
@@ -42,6 +44,8 @@
     </div>
   </div>
   {% endfor %}
+  {% endif %}
+  {% endwith %}
 
   <div class="container">
     <div class="row">

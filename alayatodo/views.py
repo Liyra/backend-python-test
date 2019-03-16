@@ -7,13 +7,17 @@ from flask import (
     session,
     abort,
     jsonify,
-    url_for
+    url_for,
+    flash
 )
 from alayatodo.models import Users, Todos
 from functools import wraps
 
 
 ERROR_STRING_404 = 'Resource not found'
+DESCRIPTION_NOT_FOUND_FLASH = 'A description must be provided!'
+TODO_CREATE_MESSAGE_FLASH = 'A todo has been successfully created!'
+TODO_DELETE_MESSAGE_FLASH = 'A todo has been successfully deleted!'
 PAGINATION_NUMBER = 3
 
 
@@ -83,8 +87,7 @@ def todos():
         'todos', page=todos.next_num) if todos.has_next else None
     prev_url = url_for(
         'todos', page=todos.prev_num) if todos.has_prev else None
-    return render_template('todos.html', todos=todos.items, get_flashed_messages=get_flashed_messages,
-                           next_url=next_url, prev_url=prev_url)
+    return render_template('todos.html', todos=todos.items, next_url=next_url, prev_url=prev_url)
 
 
 @app.route('/todo', methods=['POST'])
@@ -93,12 +96,12 @@ def todos():
 def todos_POST():
     description = request.form.get('description')
     if not description:
-        session['alert'] = ['A description must be provided!']
+        flash(DESCRIPTION_NOT_FOUND_FLASH)
         return redirect('/todo')
     db.session.add(
         Todos(user_id=session['user']['id'], description=description))
     db.session.commit()
-    session['alert'] = ['A todo has been successfully created!']
+    flash(TODO_CREATE_MESSAGE_FLASH)
     return redirect('/todo')
 
 
@@ -109,7 +112,7 @@ def todo_DELETE(todo_id):
         user_id=session.get('user')['id'], id=todo_id).delete()
     db.session.commit()
     if deleted == 1:
-        session['alert'] = ['A todo has been successfully deleted!']
+        flash(TODO_DELETE_MESSAGE_FLASH)
         return redirect('/todo')
     return abort(404, ERROR_STRING_404)
 
