@@ -12,10 +12,11 @@ from flask import (
 )
 from alayatodo.models import Users, Todos
 from functools import wraps
+from alayatodo.exception import InvalidUsageJson
 
 
 ERROR_STRING_404 = 'Resource not found'
-DESCRIPTION_NOT_FOUND_FLASH = 'A description must be provided!'
+DESCRIPTION_NOT_FOUND = 'A description must be provided!'
 TODO_CREATE_MESSAGE_FLASH = 'A todo has been successfully created!'
 TODO_DELETE_MESSAGE_FLASH = 'A todo has been successfully deleted!'
 PAGINATION_NUMBER = 3
@@ -97,8 +98,7 @@ def todos():
 def todos_POST():
     description = request.form.get('description')
     if not description:
-        flash(DESCRIPTION_NOT_FOUND_FLASH)
-        return redirect('/todo')
+        raise InvalidUsageJson(DESCRIPTION_NOT_FOUND, status_code=400)
     db.session.add(
         Todos(user_id=session['user']['id'], description=description))
     db.session.commit()
@@ -136,11 +136,4 @@ def todo_json(todo_id):
         user_id=session.get('user')['id'], id=todo_id).first()
     if todo:
         return jsonify(todo.to_dict())
-    else:
-        return abort(404, ERROR_STRING_404)
-
-
-def get_flashed_messages():
-    alert = session['alert'] if 'alert' in session else []
-    session.pop('alert', None)
-    return alert
+    raise InvalidUsageJson(ERROR_STRING_404, status_code=404)
