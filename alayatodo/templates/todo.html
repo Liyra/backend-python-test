@@ -13,7 +13,7 @@
             <td>{{ todo.id }}</td>
             <td>{{ todo.user_id }}</td>
             <td>
-                <a href="{{ url_for('todo', id=todo.id) }}">
+                <a href="{{ url_for('todo', todo_id=todo.id) }}">
                     {{ todo.description }}
                 </a>
             </td>
@@ -25,11 +25,11 @@
                 {% endif %}
             </td>
             <td>
-                <form class="actions-form" method="post" action="{{ url_for('todo_DELETE', id=todo.id) }}">
+                <form class="actions-form" method="post" action="{{ url_for('todo_DELETE', todo_id=todo.id) }}">
                     <button type="submit" class="btn btn-xs btn-danger"><span
                             class="glyphicon glyphicon-remove glyphicon-white"></span></button>
                 </form>
-                <form class="actions-form" method="post" action="{{ url_for('todo_POST', id=todo.id) }}">
+                <form class="actions-form" method="post" action="{{ url_for('todo_POST', todo_id=todo.id) }}">
                     <button type="submit" class="btn btn-xs btn-success"><span
                             class="glyphicon glyphicon-ok glyphicon-white"></span></button>
                 </form>

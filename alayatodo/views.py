@@ -63,11 +63,11 @@ def logout():
     return redirect('/')
 
 
-@app.route('/todo/<id>', methods=['GET'])
+@app.route('/todo/<todo_id>', methods=['GET'])
 @login_check
-def todo(id):
+def todo(todo_id):
     todo = Todos.query.filter_by(
-        user_id=session.get('user')['id'], id=id).first()
+        user_id=session.get('user')['id'], id=todo_id).first()
     if todo:
         return render_template('todo.html', todo=todo)
     else:
@@ -104,31 +104,31 @@ def todos_POST():
     return redirect('/todo')
 
 
-@app.route('/todo/<id>', methods=['POST'])
+@app.route('/todo/<todo_id>', methods=['POST'])
 @login_check
-def todo_DELETE(id):
+def todo_DELETE(todo_id):
     deleted = Todos.query.filter_by(
-        user_id=session.get('user')['id'], id=id).delete()
+        user_id=session.get('user')['id'], id=todo_id).delete()
     db.session.commit()
     if deleted == 1:
         session['alert'] = ['A todo has been successfully deleted!']
     return redirect('/todo')
 
 
-@app.route('/todo/<id>/complete', methods=['POST'])
+@app.route('/todo/<todo_id>/complete', methods=['POST'])
 @login_check
-def todo_POST(id):
+def todo_POST(todo_id):
     db.session.query(Todos).filter_by(user_id=session.get(
-        'user')['id'], id=id).update({"completed": True})
+        'user')['id'], id=todo_id).update({"completed": True})
     db.session.commit()
     return redirect('/todo')
 
 
-@app.route('/todo/<id>/json', methods=['GET'])
+@app.route('/todo/<todo_id>/json', methods=['GET'])
 @login_check
-def todo_json(id):
+def todo_json(todo_id):
     todo = Todos.query.filter_by(
-        user_id=session.get('user')['id'], id=id).first()
+        user_id=session.get('user')['id'], id=todo_id).first()
     if todo:
         return jsonify(todo.to_dict())
     else:
