@@ -41,7 +41,8 @@
             <form method="post" action="{{ url_for('todos_POST') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <td colspan="3">
-                    <input type="textbox" name="description" class="small-6 small-center" placeholder="Description...">
+                    <input type="textbox" name="description" class="small-6 small-center" placeholder="Description..."
+                        required>
                 </td>
                 <td>
                     <button type="submit" class="btn btn-sm btn-primary">Add</button>
