@@ -88,7 +88,7 @@ def todos():
 @app.route('/todo/', methods=['POST'])
 @login_check
 def todos_POST():
-    description = request.form.get('description', None)
+    description = request.form.get('description')
     if description is None or description is '':
         session['alert'] = ['A description must be provided!']
         return redirect('/todo')
