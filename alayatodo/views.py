@@ -11,10 +11,20 @@ from flask import (
     url_for
     )
 from alayatodo.models import Users, Todos
+from functools import wraps
 
 
 ERROR_STRING_404 ='Resource not found'
 PAGINATION_NUMBER = 3
+
+
+def login_check(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if not session.get('logged_in'):
+            return redirect('/login')
+        return func(*args, **kwargs)
+    return wrapper
 
 
 @app.route('/')
@@ -55,9 +65,8 @@ def logout():
 
 
 @app.route('/todo/<id>', methods=['GET'])
+@login_check
 def todo(id):
-    if not session.get('logged_in'):
-        return redirect('/login')
     todo = Todos.query.filter_by(user_id=session.get('user')['id'], id=id).first()
     if todo:
         return render_template('todo.html', todo=todo)
@@ -67,9 +76,8 @@ def todo(id):
 
 @app.route('/todo', methods=['GET'])
 @app.route('/todo/', methods=['GET'])
+@login_check
 def todos():
-    if not session.get('logged_in'):
-        return redirect('/login')
     page = request.args.get('page', 1, type=int)
     todos = Todos.query.filter_by(user_id=session.get('user')['id']).paginate(page, PAGINATION_NUMBER, False)
     next_url = url_for('todos', page=todos.next_num) if todos.has_next else None
@@ -80,9 +88,8 @@ def todos():
 
 @app.route('/todo', methods=['POST'])
 @app.route('/todo/', methods=['POST'])
+@login_check
 def todos_POST():
-    if not session.get('logged_in'):
-        return redirect('/login')
     description = request.form.get('description', None)
     if description is None or description is '':
         session['alert'] = ['A description must be provided!']
@@ -94,9 +101,8 @@ def todos_POST():
 
 
 @app.route('/todo/<id>', methods=['POST'])
+@login_check
 def todo_DELETE(id):
-    if not session.get('logged_in'):
-        return redirect('/login')
     deleted = Todos.query.filter_by(user_id=session.get('user')['id'], id=id).delete()
     db.session.commit()
     if deleted == 1:
@@ -105,18 +111,16 @@ def todo_DELETE(id):
 
 
 @app.route('/todo/<id>/complete', methods=['POST'])
+@login_check
 def todo_POST(id):
-    if not session.get('logged_in'):
-        return redirect('/login')
     db.session.query(Todos).filter_by(user_id=session.get('user')['id'], id=id).update({ "completed": True})
     db.session.commit()
     return redirect('/todo')
 
 
 @app.route('/todo/<id>/json', methods=['GET'])
+@login_check
 def todo_json(id):
-    if not session.get('logged_in'):
-        return redirect('/login')
     todo = Todos.query.filter_by(user_id=session.get('user')['id'], id=id).first()
     if todo:
         return jsonify(todo.to_dict())
