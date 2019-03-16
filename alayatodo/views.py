@@ -69,8 +69,7 @@ def todo(todo_id):
         user_id=session.get('user')['id'], id=todo_id).first()
     if todo:
         return render_template('todo.html', todo=todo)
-    else:
-        return abort(404, ERROR_STRING_404)
+    return abort(404, ERROR_STRING_404)
 
 
 @app.route('/todo', methods=['GET'])
