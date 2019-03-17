@@ -5,3 +5,4 @@ docopt
 passlib
 bcrypt
 Flask_wtf
+pytest
